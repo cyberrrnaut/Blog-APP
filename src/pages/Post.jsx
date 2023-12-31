@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import appwriteService from "../appwrite/config";
-import { Button, Container } from "../components";
+import { Button, Container } from "../components"; // Add a Loader component if you have one
 import parse from "html-react-parser";
 import { useSelector } from "react-redux";
+import Loader from "../components/Loader";
 
 export default function Post() {
   const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true); // Added loading state
   const { slug } = useParams();
   const navigate = useNavigate();
 
@@ -15,22 +17,46 @@ export default function Post() {
   const isAuthor = post && userData ? post.userId === userData.$id : false;
 
   useEffect(() => {
-    if (slug) {
-      appwriteService.getPost(slug).then((post) => {
-        if (post) setPost(post);
-        else navigate("/");
-      });
-    } else navigate("/");
+    const fetchData = async () => {
+      try {
+        if (slug) {
+          const fetchedPost = await appwriteService.getPost(slug);
+          if (fetchedPost) {
+            setPost(fetchedPost);
+          } else {
+            navigate("/");
+          }
+        } else {
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Error fetching post:", error);
+        navigate("/"); // Navigate on error
+      } finally {
+        setLoading(false); // Set loading to false regardless of success or failure
+      }
+    };
+
+    fetchData();
   }, [slug, navigate]);
 
-  const deletePost = () => {
-    appwriteService.deletePost(post.$id).then((status) => {
-      if (status) {
-        appwriteService.deleteFile(post.featuredimage);
-        navigate("/");
+  const deletePost = async () => {
+    try {
+      if (post) {
+        const status = await appwriteService.deletePost(post.$id);
+        if (status) {
+          await appwriteService.deleteFile(post.featuredimage);
+          navigate("/");
+        }
       }
-    });
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
   };
+
+  if (loading) {
+    return <Loader />; // Display a loader while data is being fetched
+  }
 
   return post ? (
     <div className="py-8">
@@ -58,8 +84,7 @@ export default function Post() {
         <div className="w-full mb-6">
           <h1 className="text-2xl font-bold">{post.title}</h1>
         </div>
-        <div className="browser-css">{parse(post.content)}
-        </div>
+        <div className="browser-css">{parse(post.content)}</div>
       </Container>
     </div>
   ) : null;
