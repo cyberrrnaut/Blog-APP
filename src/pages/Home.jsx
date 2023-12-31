@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import appwriteService from "../appwrite/config";
-import { Container, PostCard } from "../components";
+import { Container, Logo, PostCard } from "../components";
 
 function Home() {
+  
   const [posts, setPosts] = useState([]);
 
   useEffect(() => {
@@ -17,11 +18,12 @@ function Home() {
     return (
       <div className="w-full py-8 mt-4 text-center">
         <Container>
-          <div className="flex flex-wrap">
-            <div className="p-2 w-full">
+          <div className="flex flex-wrap items-center justify-center">
+            <div className="p-2">
               <h1 className="text-2xl font-bold hover:text-gray-500">
-                Login to read posts
+                Login to read blogs...
               </h1>
+              <Logo className="mx-auto my-auto" />
             </div>
           </div>
         </Container>
